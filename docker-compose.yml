@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  year-wrapper:
+    user: root
+    image: year_wrapper:0.1
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    environment:
+      ENV: "prod"
+      LIMIT: "100"
+      SQL_PATH: "/code/app/sql/"
+      PROJECT_DWH: "bq-dwh-prod-327613"
+      GCLOUD_PROJECT: "bq-datalake-prod"
+      GOOGLE_APPLICATION_CREDENTIALS: "/credentials.json"
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data/:/code/data
+      - ./src/app/:/code/app
+      - ~/.config/gcloud/application_default_credentials.json:/credentials.json
+    command: /usr/local/bin/python -m streamlit run main.py --theme.textColor="#544b3d" --theme.primaryColor="#D17B0F" --theme.secondaryBackgroundColor="#AEC5EB" --server.address=0.0.0.0 --server.port=8080
