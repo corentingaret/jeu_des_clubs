@@ -1,0 +1,8 @@
+*.pyc
+venv/
+.idea/
+*.iml
+rst.json
+/resources.json
+.pulumi/
+.DS_Store
