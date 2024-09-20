@@ -45,18 +45,22 @@ def complete_preprocessing(
     df["market_value_in_eur"] = df["market_value_in_eur"] / 1_000_000
     df = df.loc[df["preprocessed_to_club_name"] != "na"].copy()
 
-    return df
+    df["year"] = df["transfer_date"].apply(lambda x: x[:4])
+
+    df["club_is_same_as_next"] = df["to_club_id"] == df["to_club_id"].shift(-1)
+
+    return df.loc[df["club_is_same_as_next"] == False]
 
 
-def prepare_data(df: pandas.DataFrame):
+def prepare_data(df: pandas.DataFrame, minimum_value: int):
 
     grouped = (
         df.groupby(["player_id", "player_name"])
-        .agg({"to_club_name": list, "market_value_in_eur": "max"})
+        .agg({"to_club_name": list, "year": list, "market_value_in_eur": "max"})
         .reset_index()
     )
 
-    grouped = grouped.loc[grouped["market_value_in_eur"] >= 20].copy()
+    grouped = grouped.loc[grouped["market_value_in_eur"] >= minimum_value].copy()
 
     players_id = grouped["player_id"].tolist()
     players_names = grouped["player_name"].tolist()
