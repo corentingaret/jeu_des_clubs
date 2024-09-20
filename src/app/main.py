@@ -68,7 +68,7 @@ streamlit.title("Jeu des clubs 🎊")
 if 'player_state' not in streamlit.session_state:
     streamlit.session_state['player_state'] = 'new'
     
-df = pandas.read_csv("/code/data/archive/transfers.csv")
+df = pandas.read_csv("data/archive/transfers.csv")
 
 streamlit.info("Guess the player ⚽️")
 
