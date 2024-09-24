@@ -48,19 +48,6 @@ def get_new_player_info():
     streamlit.session_state["player_state"] = "old"
 
 
-def show_dashboard():
-    streamlit.info(
-        f"""
-        Guess the player ⚽️
-        Get the maximum points out of {NUMBER_OF_ROUNDS} rounds."""
-    )
-    column_dash = streamlit.columns(3)
-    column_dash[0].metric(
-        "Number of points", streamlit.session_state["user_total_points"]
-    )
-    column_dash[1].metric("Rounds left", streamlit.session_state["rounds_left"])
-
-
 def end_statement():
     streamlit.success("Thanks for playing, you scored a total of")
     column_dash = streamlit.columns(3)
@@ -109,7 +96,23 @@ if streamlit.session_state["rounds_left"] == 0:
 
 else:
     # DASHBOARD
-    show_dashboard()
+    streamlit.info(
+        f"""
+        Guess the player ⚽️
+        Get the maximum points out of {NUMBER_OF_ROUNDS} rounds."""
+    )
+    column_dash = streamlit.columns(3)
+    column_dash[0].metric(
+        "Number of points", streamlit.session_state["user_total_points"]
+    )
+    column_dash[1].metric("Rounds left", streamlit.session_state["rounds_left"])
+
+    # HELP BUTTON LOGIC
+    if column_dash[2].button(f"Help me! (-{PENALTY_HELP} pts)", key="help"):
+        streamlit.session_state["year_help"] = True
+        streamlit.session_state["round_points"] = max(
+            streamlit.session_state["round_points"] - PENALTY_HELP, 0
+        )
 
     # PREPROCESSING
     df = helpers.preprocessing.complete_preprocessing(df=df, clubs=clubs)
@@ -130,17 +133,10 @@ else:
     )
 
     # BUTTONS
-    columns = streamlit.columns(4)
-
-    # HELP BUTTON LOGIC
-    if columns[0].button(f"Help me! (-{PENALTY_HELP} pts)", key="help"):
-        streamlit.session_state["year_help"] = True
-        streamlit.session_state["round_points"] = max(
-            streamlit.session_state["round_points"] - PENALTY_HELP, 0
-        )
+    columns = streamlit.columns(3)
 
     # SUBMIT BUTTON LOGIC
-    if columns[1].button(
+    if columns[0].button(
         f'Submit ({streamlit.session_state["round_points"]} pts)', key="submit"
     ):
         if choice == streamlit.session_state["player_name"]:
@@ -151,6 +147,8 @@ else:
             streamlit.session_state["player_state"] = "new"
         elif choice != "":
             streamlit.session_state["is_wrong"] = True
+            streamlit.session_state["show_solution"] = True
+            streamlit.session_state["round_points"] = 0
 
     if streamlit.session_state["is_correct"]:
         streamlit.success("Correct! 🎉")
@@ -159,7 +157,7 @@ else:
         streamlit.error("Wrong! ❌")
 
     # SOLUTION BUTTON LOGIC
-    if streamlit.button("Give me the solution (0 pts)", key="solution"):
+    if columns[1].button("Give me the solution (0 pts)", key="solution"):
         streamlit.session_state["show_solution"] = True
         streamlit.session_state["round_points"] = 0
 
