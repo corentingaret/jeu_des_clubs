@@ -21,21 +21,29 @@ def reset_player_state():
     )
 
 
-def display_clubs(year_help: bool) -> None:
+def display_clubs(help: int) -> None:
+
     for i, club in enumerate(
         streamlit.session_state["player_df"].loc[0, "to_club_name"][-5:]
     ):
-        if not year_help:
+        len_ = len(streamlit.session_state["player_df"].loc[0, "to_club_name"])
+        if help < 2:
             streamlit.markdown(f"{i + 1}. {club}")
         else:
             streamlit.markdown(
-                f"{i + 1}. {club} - {streamlit.session_state['player_df'].loc[0, 'year'][i]}"
+                f"{i + 1}. {club} - {streamlit.session_state['player_df'].loc[0, 'year'][i-len_]}"
             )
+
+    if help > 0:
+        streamlit.info(
+            f'Nationality: {streamlit.session_state["player_df"].loc[0, "Emoji"]} {streamlit.session_state["player_df"].loc[0, "country_of_citizenship"]}'
+        )
+
     return
 
 
 def get_new_player_info():
-    streamlit.session_state["year_help"] = False
+    streamlit.session_state["help_"] = 0
     streamlit.session_state["player_id"] = random.choice(players_id)
     streamlit.session_state["player_df"] = (
         grouped.loc[grouped["player_id"] == streamlit.session_state["player_id"]]
@@ -61,8 +69,8 @@ streamlit.title("Jeu des clubs 🎊")
 if "player_state" not in streamlit.session_state:
     streamlit.session_state["player_state"] = "new"
 
-if "year_help" not in streamlit.session_state:
-    streamlit.session_state["year_help"] = False
+if "help_" not in streamlit.session_state:
+    streamlit.session_state["help_"] = 0
 
 if "user_total_points" not in streamlit.session_state:
     streamlit.session_state["user_total_points"] = 0
@@ -89,6 +97,7 @@ if "selected_player" not in streamlit.session_state:
 # GET DATA
 df = pandas.read_csv("data/archive/transfers.csv")
 clubs = pandas.read_csv("data/archive/clubs.csv")
+players = pandas.read_csv("data/archive/players_nationality.csv")
 
 # CHECK IF FINISHED
 if streamlit.session_state["rounds_left"] == 0:
@@ -102,20 +111,21 @@ else:
         Get the maximum points out of {NUMBER_OF_ROUNDS} rounds."""
     )
     column_dash = streamlit.columns(3)
-    column_dash[0].metric(
-        "Number of points", streamlit.session_state["user_total_points"]
-    )
+    column_dash[0].metric("Total points", streamlit.session_state["user_total_points"])
     column_dash[1].metric("Rounds left", streamlit.session_state["rounds_left"])
 
     # HELP BUTTON LOGIC
     if column_dash[2].button(f"Help me! (-{PENALTY_HELP} pts)", key="help"):
-        streamlit.session_state["year_help"] = True
+        streamlit.session_state["help_"] += 1
+        streamlit.session_state["help_"] = min(streamlit.session_state["help_"], 2)
         streamlit.session_state["round_points"] = max(
             streamlit.session_state["round_points"] - PENALTY_HELP, 0
         )
 
     # PREPROCESSING
-    df = helpers.preprocessing.complete_preprocessing(df=df, clubs=clubs)
+    df = helpers.preprocessing.complete_preprocessing(
+        df=df, clubs=clubs, players=players
+    )
     grouped, players_id, players_names = helpers.preprocessing.prepare_data(
         df=df, minimum_value=MINIMUM_VALUE
     )
@@ -125,7 +135,7 @@ else:
         get_new_player_info()
 
     # DISPLAY CLUBS
-    display_clubs(year_help=streamlit.session_state["year_help"])
+    display_clubs(help=streamlit.session_state["help_"])
 
     # Use the tracked selected_player for the selectbox
     choice = streamlit.selectbox(
@@ -157,7 +167,7 @@ else:
         streamlit.error("Wrong! ❌")
 
     # SOLUTION BUTTON LOGIC
-    if columns[1].button("Give me the solution (0 pts)", key="solution"):
+    if columns[1].button("Get solution (0 pts)", key="solution"):
         streamlit.session_state["show_solution"] = True
         streamlit.session_state["round_points"] = 0
 

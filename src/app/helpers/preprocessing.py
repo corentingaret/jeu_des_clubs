@@ -31,7 +31,7 @@ def club_preprocessing(club: str) -> str:
 
 
 def complete_preprocessing(
-    df: pandas.DataFrame, clubs: pandas.DataFrame
+    df: pandas.DataFrame, clubs: pandas.DataFrame, players: pandas.DataFrame
 ) -> pandas.DataFrame:
 
     df = df.sort_values(by=["player_id", "transfer_date"], ascending=True)
@@ -49,13 +49,15 @@ def complete_preprocessing(
 
     df["club_is_same_as_next"] = df["to_club_id"] == df["to_club_id"].shift(-1)
 
+    df = df.merge(players, on="player_id")
+
     return df.loc[df["club_is_same_as_next"] == False]
 
 
 def prepare_data(df: pandas.DataFrame, minimum_value: int):
 
     grouped = (
-        df.groupby(["player_id", "player_name"])
+        df.groupby(["player_id", "player_name", "country_of_citizenship", "Emoji"])
         .agg({"to_club_name": list, "year": list, "market_value_in_eur": "max"})
         .reset_index()
     )
