@@ -1,22 +1,11 @@
 
-# Running using Docker
+# Jeu des clubs
 
-## Create the containers network
+An interactive game to test your knowledge on the current best football players.
 
-
-* Create the containers network if it doesn't exist
-
-
-## Run the user interface
-
-* Build the container
+## Run the game
 
 ```console
-docker compose build
-```
-
-* Run interface:
-
-```
-docker compose up
+pip install -r requirements/app.txt
+streamlit run src/app/main.py
 ```
